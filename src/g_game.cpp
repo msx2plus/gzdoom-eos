@@ -439,6 +439,7 @@ CCMD (invnext)
 			VMCall(func, &param, 1, nullptr, 0);
 		}
 	}
+    S_Sound(CHAN_AUTO, 0, "INVMOVE", 1.0, ATTN_NONE);
 }
 
 CCMD(invprev)
@@ -451,6 +452,7 @@ CCMD(invprev)
 			VMCall(func, &param, 1, nullptr, 0);
 		}
 	}
+    S_Sound(CHAN_AUTO, 0, "INVMOVE", 1.0, ATTN_NONE);
 }
 
 CCMD (invuseall)
@@ -678,6 +680,10 @@ void G_BuildTiccmd (ticcmd_t *cmd)
 	if (buttonMap.ButtonDown(Button_User2))			cmd->ucmd.buttons |= BT_USER2;
 	if (buttonMap.ButtonDown(Button_User3))			cmd->ucmd.buttons |= BT_USER3;
 	if (buttonMap.ButtonDown(Button_User4))			cmd->ucmd.buttons |= BT_USER4;
+    
+	if (buttonMap.ButtonDown(Button_SonataUp))		cmd->ucmd.buttons |= BT_SNUP;
+	if (buttonMap.ButtonDown(Button_SonataDown))	cmd->ucmd.buttons |= BT_SNDOWN;
+	if (buttonMap.ButtonDown(Button_SonataLeft))	cmd->ucmd.buttons |= BT_SNLEFT;
 
 	if (buttonMap.ButtonDown(Button_Speed))			cmd->ucmd.buttons |= BT_SPEED;
 	if (buttonMap.ButtonDown(Button_Strafe))		cmd->ucmd.buttons |= BT_STRAFE;
@@ -1764,6 +1770,7 @@ void FLevelLocals::DoReborn (int playernum, bool freshbot)
 			BackupSaveName = "";
 			G_InitNew (MapName.GetChars(), false);
 			demoplayback = indemo;
+			demoplayback = indemo;
 		}
 	}
 	else
@@ -2224,6 +2231,8 @@ CUSTOM_CVAR (Int, quicksaverotationcount, 4, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 
 void G_DoAutoSave ()
 {
+    
+    
 	FString description;
 	FString file;
 	// Keep up to four autosaves at a time
@@ -2253,7 +2262,7 @@ void G_DoAutoSave ()
 	}
 
 	readableTime = myasctime ();
-	description.Format("Autosave %s", readableTime);
+	description.Format("%s - %s", readableTime, primaryLevel->LevelName.GetChars());
 	G_DoSaveGame (false, false, file, description.GetChars());
 }
 
@@ -2281,7 +2290,7 @@ void G_DoQuickSave ()
 	file = G_BuildSaveName(FStringf("quick%02d", lastquicksave).GetChars());
 
 	readableTime = myasctime ();
-	description.Format("Quicksave %s", readableTime);
+	description.Format("QuickSave %s", readableTime);
 	G_DoSaveGame (true, true, file, description.GetChars());
 }
 

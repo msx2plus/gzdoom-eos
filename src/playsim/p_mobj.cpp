@@ -7178,7 +7178,7 @@ AActor *P_SpawnPlayerMissile (AActor *source, double x, double y, double z,
 	}
 	aimflags &= ~ALF_IGNORENOAUTOAIM; // just to be safe.
 
-	static const double angdiff[3] = { -5.625, 5.625, 0 };
+	static const double angdiff[3] = { -2, 2, 0 }; // narrowed from -5.625, 5.625
 	DAngle an = angle;
 	DAngle pitch;
 	FTranslatedLineTarget scratch;

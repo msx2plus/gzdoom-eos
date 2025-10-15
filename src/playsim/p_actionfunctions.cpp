@@ -796,7 +796,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BulletAttack)
 	S_Sound (self, CHAN_WEAPON, 0, self->AttackSound, 1, ATTN_NORM);
 	for (i = self->GetMissileDamage (0, 1); i > 0; --i)
     {
-		DAngle angle = self->Angles.Yaw + DAngle::fromDeg(pr_cabullet.Random2() * (5.625 / 256.));
+		DAngle angle = self->Angles.Yaw + DAngle::fromDeg(pr_cabullet.Random2() * (2 / 256.)); // narrowed from 5.625
 		int damage = ((pr_cabullet()%5)+1)*3;
 		P_LineAttack(self, angle, MISSILERANGE, slope, damage,
 			NAME_Hitscan, NAME_BulletPuff);

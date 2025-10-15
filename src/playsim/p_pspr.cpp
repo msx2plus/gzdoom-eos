@@ -1246,7 +1246,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_ClearOverlays)
 
 DAngle P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimflags)
 {
-	static const double angdiff[3] = { -5.625f, 5.625f, 0 };
+	static const double angdiff[3] = { -2.0f, 2.0f, 0 }; // narrowed from -5.625, 5.625
 	int i;
 	DAngle an;
 	DAngle pitch;

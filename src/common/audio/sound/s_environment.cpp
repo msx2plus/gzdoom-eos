@@ -128,14 +128,13 @@ static const char *BoolNames[3] = { "False", "True", NULL };
 
 static ReverbContainer DSPWater =
 {
-	// Based on the "off" reverb, this one uses the software water effect,
-	// which is completely independant from EAX-like reverb.
+	// copied from forest
 	NULL,
 	"DSP Water",
 	0xffff,
 	true,
 	false,
-	{0, 0,	7.5f,	1.00f, -10000, -10000, 0,   1.00f,  1.00f, 1.0f,  -2602, 0.007f, 0.0f,0.0f,0.0f,   200, 0.011f, 0.0f,0.0f,0.0f, 0.250f, 0.00f, 0.25f, 0.000f, -5.0f, 5000.0f, 250.0f, 0.0f,   0.0f,   0.0f, 0x33f },
+	{0,15,	38.0f,	0.30f, -1000,  -3300,  0,   1.49f,  0.54f, 1.0f,  -2560, 0.162f, 0.0f,0.0f,0.0f,  -229, 0.088f, 0.0f,0.0f,0.0f, 0.125f, 1.00f, 0.25f, 0.000f, -5.0f, 5000.0f, 250.0f, 0.0f,  79.0f, 100.0f, 0x3f },
 	true
 };
 

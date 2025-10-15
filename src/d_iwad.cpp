@@ -247,12 +247,6 @@ void FIWadManager::ParseIWadInfo(const char *fn, const char *data, int datasize,
 					sc.MustGetNumber();
 					iwad->LoadWidescreen = sc.Number;
 				}
-				else if (sc.Compare("DiscordAppId"))
-				{
-					sc.MustGetStringName("=");
-					sc.MustGetString();
-					iwad->DiscordAppId = sc.String;
-				}
 				else if (sc.Compare("SteamAppId"))
 				{
 					sc.MustGetStringName("=");
@@ -859,7 +853,6 @@ const FIWADInfo *FIWadManager::FindIWAD(std::vector<std::string>& wadfiles, cons
 		GameStartupInfo.LoadBrightmaps = iwad_info->LoadBrightmaps;
 	if (GameStartupInfo.Type == 0) GameStartupInfo.Type = iwad_info->StartupType;
 	if (GameStartupInfo.Song.IsEmpty()) GameStartupInfo.Song = iwad_info->Song;
-	if (GameStartupInfo.DiscordAppId.IsEmpty()) GameStartupInfo.DiscordAppId = iwad_info->DiscordAppId;
 	if (GameStartupInfo.SteamAppId.IsEmpty()) GameStartupInfo.SteamAppId = iwad_info->SteamAppId;
 	I_SetIWADInfo();
 	return iwad_info;

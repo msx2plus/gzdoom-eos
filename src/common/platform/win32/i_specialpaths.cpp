@@ -90,7 +90,7 @@ bool IsPortable()
 	}
 
 	// A portable INI means that this storage location should also be portable if the file can be written to.
-	FStringf path("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+	FStringf path("%s" "eos.ini", progdir.GetChars());
 	if (FileExists(path))
 	{
 		file = CreateFile(path.WideString().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
@@ -98,7 +98,6 @@ bool IsPortable()
 		if (file != INVALID_HANDLE_VALUE)
 		{
 			CloseHandle(file);
-			if (!batchrun) Printf("Using portable configuration\n");
 			isportable = true;
 			return true;
 		}
@@ -277,7 +276,7 @@ FString M_GetConfigPath(bool for_reading)
 {
 	if (IsPortable())
 	{
-		return FStringf("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+		return FStringf("%s" "eos.ini", progdir.GetChars());
 	}
 
 	// Construct a user-specific config name
@@ -301,7 +300,7 @@ FString M_GetConfigPath(bool for_reading)
 			int action = M_MigrateOldConfig();
 			if (action == IDNO)
 			{
-				path.Format("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+				path.Format("%s" "eos.ini", progdir.GetChars());
 				isportable = true;
 			}
 		}

@@ -524,7 +524,7 @@ public:
 
 #define AREA_SOUND_RADIUS  (32.f)
 
-#define PITCH_MULT (0.7937005f) /* Approx. 4 semitones lower; what Nash suggested */
+#define PITCH_MULT (0.95f) /* MODIFIED */
 
 static size_t GetChannelCount(ChannelConfig chans)
 {
@@ -1741,11 +1741,11 @@ void OpenALSoundRenderer::UpdateListener(SoundListener *listener)
 			if(EnvSlot != 0 && *snd_waterreverb)
 			{
 				// Find the "Underwater" reverb environment
-				env = S_FindEnvironment(0x1600);
+				env = S_FindEnvironment(0xffff); // actually directing this to DSP Water
 				LoadReverb(env ? env : DefaultEnvironments[0]);
 
 				alFilterf(EnvFilters[0], AL_LOWPASS_GAIN, 1.f);
-				alFilterf(EnvFilters[0], AL_LOWPASS_GAINHF, 0.125f);
+				alFilterf(EnvFilters[0], AL_LOWPASS_GAINHF, 0.2f); // modified
 				alFilterf(EnvFilters[1], AL_LOWPASS_GAIN, 1.f);
 				alFilterf(EnvFilters[1], AL_LOWPASS_GAINHF, 1.f);
 
