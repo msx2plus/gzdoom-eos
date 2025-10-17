@@ -746,8 +746,6 @@ void G_BuildTiccmd (ticcmd_t *cmd)
     joyaxes[JOYAXIS_Forward] = std::clamp(joyaxes[JOYAXIS_Forward] * scale, -1.f, 1.f);
     joyaxes[JOYAXIS_Side] = std::clamp(joyaxes[JOYAXIS_Side] * scale, -1.f, 1.f);
 
-	cmd->ucmd.pitch = LocalViewPitch >> 16;
-
 	if (joyaxes[JOYAXIS_Pitch] != 0) // sensitivity added
 	{
         G_AddViewPitch(joyint(joyaxes[JOYAXIS_Pitch] * ANALOG_LOOK_BASE * cl_analog_sensitivity_pitch));
@@ -756,6 +754,8 @@ void G_BuildTiccmd (ticcmd_t *cmd)
 	{
         G_AddViewAngle(joyint(-ANALOG_LOOK_BASE * cl_analog_sensitivity_yaw * joyaxes[JOYAXIS_Yaw]));
 	}
+    
+    cmd->ucmd.pitch = LocalViewPitch >> 16;
    
     side -= joyint(joyaxes[JOYAXIS_Side] * sidemove[cl_analog_run | speed]);
 	forward += joyint(joyaxes[JOYAXIS_Forward] * forwardmove[cl_analog_run | speed]);
