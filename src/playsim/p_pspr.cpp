@@ -1246,30 +1246,61 @@ DEFINE_ACTION_FUNCTION(AActor, A_ClearOverlays)
 
 DAngle P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimflags)
 {
-	static const double angdiff[3] = { -2.0f, 2.0f, 0 }; // narrowed from -5.625, 5.625
-	int i;
-	DAngle an;
-	DAngle pitch;
-	FTranslatedLineTarget scratch;
+    EXTERN_CVAR (Float, cl_horizaimassist);
 
-	aimflags &= ~ALF_IGNORENOAUTOAIM; // just to be safe.
-	if (pLineTarget == NULL) pLineTarget = &scratch;
-	// see which target is to be aimed at
-	i = 2;
-	do
-	{
-		an = mo->Angles.Yaw + DAngle::fromDeg(angdiff[i]);
-		pitch = P_AimLineAttack (mo, an, 16.*64, pLineTarget, nullAngle, aimflags);
+    DAngle pitch = nullAngle;
+    FTranslatedLineTarget scratch;
+    aimflags &= ~ALF_IGNORENOAUTOAIM;
+    if (pLineTarget == nullptr) pLineTarget = &scratch;
 
-		if (mo->player != nullptr &&
-			mo->Level->IsFreelookAllowed() &&
-			mo->player->userinfo.GetAimDist() <= 0.5)
-		{
-			break;
-		}
-	} while (pLineTarget->linetarget == NULL && --i >= 0);
+    const double maxDeg   = std::max(0.0, double(cl_horizaimassist));
+    if (maxDeg <= 0.0)
+    {
+        DAngle an = mo->Angles.Yaw;
+        return P_AimLineAttack(mo, an, 16.*64, pLineTarget, nullAngle, aimflags);
+    }
 
-	return pitch;
+    const double coarseStep = std::clamp(maxDeg / 8.0, 0.5, 3.0);
+    const double fineStep   = std::max(coarseStep * 0.25, 0.125);
+
+    auto try_sweep = [&](double stepDeg) -> bool
+    {
+        for (int k = 0;; ++k)
+        {
+            const double delta = k * stepDeg;
+            if (delta > maxDeg) break;
+
+            for (int side = (k == 0 ? 0 : +1); side >= (k == 0 ? 0 : -1); side -= 2)
+            {
+                const double yawOffsetDeg = (side == 0) ? 0.0 : (side > 0 ? +delta : -delta);
+                DAngle an = mo->Angles.Yaw + DAngle::fromDeg(yawOffsetDeg);
+
+                pitch = P_AimLineAttack(mo, an, 16.*64, pLineTarget, nullAngle, aimflags);
+
+                if (mo->player != nullptr &&
+                    mo->Level->IsFreelookAllowed() &&
+                    mo->player->userinfo.GetAimDist() <= 0.5f)
+                {
+                    return true;
+                }
+
+                if (pLineTarget->linetarget != nullptr)
+                {
+                    return true;
+                }
+            }
+        }
+        return false; 
+    };
+
+    if (!try_sweep(coarseStep))
+    {
+        try_sweep(fineStep);
+    }
+    else if (pLineTarget->linetarget == nullptr)
+    {
+    }
+    return pitch;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, BulletSlope)

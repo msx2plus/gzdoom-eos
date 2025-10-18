@@ -7172,94 +7172,119 @@ AActor *P_SpawnPlayerMissile (AActor *source, double x, double y, double z,
 							  PClassActor *type, DAngle angle, FTranslatedLineTarget *pLineTarget, AActor **pMissileActor,
 							  bool nofreeaim, bool noautoaim, int aimflags)
 {
-	if (source == nullptr || type == nullptr)
-	{
-		return nullptr;
-	}
-	aimflags &= ~ALF_IGNORENOAUTOAIM; // just to be safe.
+	if (source == nullptr || type == nullptr) return nullptr;
 
-	static const double angdiff[3] = { -2, 2, 0 }; // narrowed from -5.625, 5.625
+	aimflags &= ~ALF_IGNORENOAUTOAIM;
+
+	EXTERN_CVAR (Float, cl_horizaimassist);
+
 	DAngle an = angle;
-	DAngle pitch;
+	DAngle pitch = nullAngle;
 	FTranslatedLineTarget scratch;
 	AActor *defaultobject = GetDefaultByType(type);
 	DAngle vrange = DAngle::fromDeg(nofreeaim ? 35. : 0.);
 
 	if (!pLineTarget) pLineTarget = &scratch;
-	if (!(aimflags & ALF_NOWEAPONCHECK) && source->player && source->player->ReadyWeapon && ((source->player->ReadyWeapon->IntVar(NAME_WeaponFlags) & WIF_NOAUTOAIM) || noautoaim))
+
+	if (!(aimflags & ALF_NOWEAPONCHECK) && source->player && source->player->ReadyWeapon &&
+		((source->player->ReadyWeapon->IntVar(NAME_WeaponFlags) & WIF_NOAUTOAIM) || noautoaim))
 	{
-		// Keep exactly the same angle and pitch as the player's own aim
 		an = angle;
 		pitch = source->Angles.Pitch;
-		pLineTarget->linetarget = NULL;
+		pLineTarget->linetarget = nullptr;
 	}
-	else // see which target is to be aimed at
+	else
 	{
-		// [XA] If MaxTargetRange is defined in the spawned projectile, use this as the
-		//      maximum range for the P_AimLineAttack call later; this allows MaxTargetRange
-		//      to function as a "maximum tracer-acquisition range" for seeker missiles.
-		double linetargetrange = defaultobject->maxtargetrange > 0 ? defaultobject->maxtargetrange*64 : 16*64.;
+		const double linetargetrange = (defaultobject->maxtargetrange > 0)
+			? defaultobject->maxtargetrange * 64.0
+			: 16.0 * 64.0;
 
-		int i = 2;
-		do
-		{
-			an = angle + DAngle::fromDeg(angdiff[i]);
-			pitch = P_AimLineAttack (source, an, linetargetrange, pLineTarget, vrange, aimflags);
-	
-			if (source->player != NULL &&
-				!nofreeaim &&
-				source->Level->IsFreelookAllowed() &&
-				source->player->userinfo.GetAimDist() <= 0.5)
-			{
-				break;
-			}
-		} while (pLineTarget->linetarget == NULL && --i >= 0);
+		const double maxDeg = std::max(0.0, double(cl_horizaimassist));
 
-		if (pLineTarget->linetarget == NULL)
+		if (maxDeg <= 0.0)
 		{
 			an = angle;
-			if (nofreeaim || !source->Level->IsFreelookAllowed())
+			pitch = P_AimLineAttack(source, an, linetargetrange, pLineTarget, vrange, aimflags);
+		}
+		else
+		{
+			const double coarseStep = std::clamp(maxDeg / 8.0, 0.5, 3.0);
+			const double fineStep   = std::max(coarseStep * 0.25, 0.125);
+
+			auto try_sweep = [&](double stepDeg) -> bool
 			{
-				pitch = nullAngle;
+				for (int k = 0;; ++k)
+				{
+					const double delta = k * stepDeg;
+					if (delta > maxDeg) break;
+
+					for (int side = (k == 0 ? 0 : +1); side >= (k == 0 ? 0 : -1); side -= 2)
+					{
+						const double yawOffsetDeg = (side == 0) ? 0.0 : (side > 0 ? +delta : -delta);
+						an = angle + DAngle::fromDeg(yawOffsetDeg);
+
+						pitch = P_AimLineAttack(source, an, linetargetrange, pLineTarget, vrange, aimflags);
+
+						if (source->player != nullptr &&
+							!nofreeaim &&
+							source->Level->IsFreelookAllowed() &&
+							source->player->userinfo.GetAimDist() <= 0.5f)
+						{
+							return true;
+						}
+
+						if (pLineTarget->linetarget != nullptr)
+						{
+							return true;
+						}
+					}
+				}
+				return false;
+			};
+
+			if (!try_sweep(coarseStep))
+			{
+				try_sweep(fineStep);
+			}
+
+			if (pLineTarget->linetarget == nullptr)
+			{
+				an = angle;
+				pitch = (nofreeaim || !source->Level->IsFreelookAllowed())
+					? nullAngle
+					: source->Angles.Pitch;
 			}
 		}
 	}
 
 	if (z != ONFLOORZ && z != ONCEILINGZ)
 	{
-		// Doom spawns missiles 4 units lower than hitscan attacks for players.
 		z += source->Center() - source->Floorclip + source->AttackOffset(-4);
-		// Do not fire beneath the floor.
-		if (z < source->floorz)
-		{
-			z = source->floorz;
-		}
+		if (z < source->floorz) z = source->floorz;
 	}
 	DVector3 pos = source->Vec2OffsetZ(x, y, z);
-	AActor *MissileActor = Spawn (source->Level, type, pos, ALLOW_REPLACE);
+
+	AActor *MissileActor = Spawn(source->Level, type, pos, ALLOW_REPLACE);
 	if (pMissileActor) *pMissileActor = MissileActor;
+
 	P_PlaySpawnSound(MissileActor, source);
 	MissileActor->target = source;
 	MissileActor->Angles.Yaw = an;
+
 	if (MissileActor->flags3 & (MF3_FLOORHUGGER | MF3_CEILINGHUGGER))
-	{
 		MissileActor->VelFromAngle();
-	}
 	else
-	{
 		MissileActor->Vel3DFromAngle(pitch, MissileActor->Speed);
-	}
 
 	if (MissileActor->flags4 & MF4_SPECTRAL)
-	{
 		MissileActor->SetFriendPlayer(source->player);
-	}
-	if (P_CheckMissileSpawn (MissileActor, source->radius))
-	{
+
+	if (P_CheckMissileSpawn(MissileActor, source->radius))
 		return MissileActor;
-	}
-	return NULL;
+
+	return nullptr;
 }
+
 
 DEFINE_ACTION_FUNCTION(AActor, SpawnPlayerMissile)
 {
