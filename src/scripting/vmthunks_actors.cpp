@@ -2218,3 +2218,20 @@ DEFINE_ACTION_FUNCTION_NATIVE(FLevelLocals, SpawnParticle, SpawnParticle)
 	SpawnParticle(self, p);
 	return 0;
 }
+
+/////////////////////////////////////
+
+// expose line testing to zscript
+
+/////////////////////////////////////
+
+DEFINE_ACTION_FUNCTION(AActor, TestActivateLine)
+{
+    PARAM_SELF_PROLOGUE(AActor);
+    PARAM_INT(lineIndex);
+    PARAM_INT(side);
+    PARAM_INT(activationType);
+    if ((unsigned)lineIndex >= (unsigned)level.lines.Size()) ACTION_RETURN_BOOL(false);
+    line_t* ln = &level.lines[lineIndex];
+    ACTION_RETURN_BOOL(P_TestActivateLine(ln, self, side != 0, activationType, nullptr));
+}

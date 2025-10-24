@@ -388,7 +388,9 @@ class Actor : Thinker native
 	native deprecated("2.3", "Use Scale.Y instead") double ScaleY;
 
 	//FStrifeDialogueNode *Conversation; // [RH] The dialogue to show when this actor is used.;
-	
+    
+    // line test
+    native bool TestActivateLine(int lineIndex, int side = 0, int activationType = 0);
 	
 	Default
 	{
